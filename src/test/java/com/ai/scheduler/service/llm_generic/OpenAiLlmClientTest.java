@@ -1,4 +1,4 @@
-package com.ai.scheduler.service.llm;
+package com.ai.scheduler.service.llm_generic;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

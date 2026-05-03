@@ -1,7 +1,8 @@
-package com.ai.scheduler.service.llm;
+package com.ai.scheduler.service;
 
 import com.ai.scheduler.dto.llm.TaskDTO;
 import com.ai.scheduler.dto.llm.TaskListResponse;
+import com.ai.scheduler.service.llm_generic.LlmStructuredClient;
 
 import java.util.List;
 

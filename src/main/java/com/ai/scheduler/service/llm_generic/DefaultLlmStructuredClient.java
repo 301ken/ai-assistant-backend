@@ -1,4 +1,4 @@
-package com.ai.scheduler.service.llm;
+package com.ai.scheduler.service.llm_generic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

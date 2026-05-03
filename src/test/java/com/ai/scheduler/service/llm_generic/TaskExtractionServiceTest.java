@@ -1,7 +1,7 @@
-package com.ai.scheduler.service.llm;
+package com.ai.scheduler.service.llm_generic;
 
 import com.ai.scheduler.dto.llm.TaskDTO;
-import com.ai.scheduler.dto.llm.TaskListResponse;
+import com.ai.scheduler.service.TaskExtractionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
