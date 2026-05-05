@@ -1,6 +1,7 @@
 package com.ai.scheduler.service.llm_generic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 public class DefaultLlmStructuredClient implements LlmStructuredClient{
 
@@ -9,7 +10,7 @@ public class DefaultLlmStructuredClient implements LlmStructuredClient{
 
     public DefaultLlmStructuredClient(LlmClient llmClient, ObjectMapper objectMapper) {
         this.llmClient = llmClient;
-        this.objectMapper = objectMapper;
+        this.objectMapper = objectMapper.copy().registerModule(new JavaTimeModule());
     }
 
     @Override
@@ -20,7 +21,11 @@ public class DefaultLlmStructuredClient implements LlmStructuredClient{
                 DO NOT include explanations or text outside JSON.
                 """;
 
-        String raw = llmClient.generateText(prompt);
+        String raw = llmClient.generateText(enhancedPrompt);
+
+        System.out.println("Raw-----------------------------------------------");
+        System.out.println(raw);
+        System.out.println("--------------------------------------------------");
 
         int firstIndex = raw.indexOf("{");
         int lastIndex = raw.lastIndexOf("}");

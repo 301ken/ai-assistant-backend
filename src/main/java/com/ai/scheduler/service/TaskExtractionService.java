@@ -31,6 +31,6 @@ public class TaskExtractionService {
                 """.formatted(userInput);
 
         TaskListDTO taskListDTO = llmStructuredClient.generateStructuredResponse(prompt, TaskListDTO.class);
-        return taskListDTO.tasks;
+        return taskListDTO.tasks();
     }
 }
