@@ -56,6 +56,10 @@ public class GoogleCalendarService {
             event.setColorId(request.color().getColorId());
         }
 
+        if (request.recurrence() != null && !request.recurrence().isEmpty()) {
+            event.setRecurrence(request.recurrence());
+        }
+
         String timeZone = request.timeZone() != null ? request.timeZone() : "UTC";
 
         EventDateTime start = new EventDateTime()
@@ -165,7 +169,8 @@ public class GoogleCalendarService {
                 start,
                 end,
                 timeZone,
-                event.getHtmlLink());
+                event.getHtmlLink(),
+                event.getRecurrence());
     }
 
     private OffsetDateTime parseEventDateTime(EventDateTime eventDateTime) {

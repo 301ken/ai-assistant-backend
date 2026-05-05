@@ -1,6 +1,7 @@
 package com.ai.scheduler.dto.calendar.google_calendar;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 public record CalendarEventResponse(
         String id,
@@ -10,6 +11,7 @@ public record CalendarEventResponse(
         OffsetDateTime startDateTime,
         OffsetDateTime endDateTime,
         String timeZone,
-        String htmlLink
+        String htmlLink,
+        List<String> recurrence
 ) {
 }
