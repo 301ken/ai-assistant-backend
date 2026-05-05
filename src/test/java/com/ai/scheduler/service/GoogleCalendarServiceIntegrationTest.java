@@ -1,8 +1,8 @@
 package com.ai.scheduler.service;
 
 import com.ai.scheduler.dto.calendar.CalendarColor;
-import com.ai.scheduler.dto.calendar.CalendarEventRequest;
-import com.ai.scheduler.dto.calendar.CalendarEventResponse;
+import com.ai.scheduler.dto.calendar.google_calendar.CalendarEventRequest;
+import com.ai.scheduler.dto.calendar.google_calendar.CalendarEventResponse;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

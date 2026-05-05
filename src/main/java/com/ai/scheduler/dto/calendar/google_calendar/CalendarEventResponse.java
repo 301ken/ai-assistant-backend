@@ -1,4 +1,4 @@
-package com.ai.scheduler.dto.calendar;
+package com.ai.scheduler.dto.calendar.google_calendar;
 
 import java.time.OffsetDateTime;
 

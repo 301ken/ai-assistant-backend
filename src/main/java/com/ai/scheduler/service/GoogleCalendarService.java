@@ -1,7 +1,7 @@
 package com.ai.scheduler.service;
 
-import com.ai.scheduler.dto.calendar.CalendarEventRequest;
-import com.ai.scheduler.dto.calendar.CalendarEventResponse;
+import com.ai.scheduler.dto.calendar.google_calendar.CalendarEventRequest;
+import com.ai.scheduler.dto.calendar.google_calendar.CalendarEventResponse;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.DateTime;

@@ -1,7 +1,7 @@
 package com.ai.scheduler.service;
 
 import com.ai.scheduler.dto.llm.TaskDTO;
-import com.ai.scheduler.dto.llm.TaskListResponse;
+import com.ai.scheduler.dto.llm.TaskListDTO;
 import com.ai.scheduler.service.llm_generic.LlmStructuredClient;
 
 import java.util.List;
@@ -30,7 +30,7 @@ public class TaskExtractionService {
                 }
                 """.formatted(userInput);
 
-        TaskListResponse taskListResponse = llmStructuredClient.generateStructuredResponse(prompt, TaskListResponse.class);
-        return taskListResponse.tasks;
+        TaskListDTO taskListDTO = llmStructuredClient.generateStructuredResponse(prompt, TaskListDTO.class);
+        return taskListDTO.tasks;
     }
 }
