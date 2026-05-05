@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 public record SchedulerEvent(
         @NotBlank String title,
@@ -12,6 +13,7 @@ public record SchedulerEvent(
         CalendarColor color,
         @NotNull OffsetDateTime startDateTime,
         @NotNull OffsetDateTime endDateTime,
-        String timeZone
+        String timeZone,
+        List<String> recurrence
 ) {
 }

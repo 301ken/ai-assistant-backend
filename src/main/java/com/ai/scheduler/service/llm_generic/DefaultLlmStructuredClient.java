@@ -31,11 +31,22 @@ public class DefaultLlmStructuredClient implements LlmStructuredClient{
         int lastIndex = raw.lastIndexOf("}");
 
         String json = raw.substring(firstIndex, lastIndex + 1);
+        json = sanitizeJson(json);
 
         try {
             return objectMapper.readValue(json, responseType);
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse LLM response: " + raw, e);
         }
+    }
+
+    private String sanitizeJson(String raw) {
+        return raw
+                // remove non-breaking spaces
+                .replace('\u00A0', ' ')
+                // remove weird unicode control chars
+                .replaceAll("[\\u0000-\\u001F]", "")
+                // trim
+                .trim();
     }
 }
