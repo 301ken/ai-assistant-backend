@@ -41,5 +41,6 @@ public class SchedulingWorkflowController {
         Long userId = SecurityUtils.currentUserId();
         schedulingWorkflowService.rollbackLastSchedule(userId);
         return ResponseEntity.ok().build();
+    }
 }
 
