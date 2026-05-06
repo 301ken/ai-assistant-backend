@@ -77,6 +77,15 @@ public class GoogleCalendarService {
     }
 
     /**
+     * Deletes an event from the user's primary Google Calendar by event ID.
+     */
+    public void deleteEvent(String accessToken, String eventId)
+            throws IOException, GeneralSecurityException {
+        Calendar service = buildClient(accessToken);
+        service.events().delete(PRIMARY_CALENDAR, eventId).execute();
+    }
+
+    /**
      * Returns all events occurring on the given day.
      */
     public List<CalendarEventResponse> getEventsForDay(String accessToken, LocalDate date, String timeZone)
