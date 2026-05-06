@@ -1,6 +1,7 @@
 package com.ai.scheduler.dto.calendar.scheduler;
 
 import com.ai.scheduler.dto.calendar.ScheduleConstraint;
+import com.ai.scheduler.dto.llm.TaskDTO;
 import com.ai.scheduler.dto.llm.TaskListDTO;
 import com.ai.scheduler.dto.time.TimeRange;
 

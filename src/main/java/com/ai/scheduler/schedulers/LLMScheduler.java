@@ -8,7 +8,9 @@ import com.ai.scheduler.service.llm_generic.DefaultLlmStructuredClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.stereotype.Service;
 
+@Service
 public class LLMScheduler implements Scheduler {
 
     private final DefaultLlmStructuredClient structuredClient;
@@ -68,7 +70,7 @@ public class LLMScheduler implements Scheduler {
     // ----------------------------
     private String buildPrompt(SchedulingRequest request) {
 
-        String tasksJson = toJson(request.tasks().tasks());
+        String tasksJson = toJson(request.tasks());
         String constraintsJson = toJson(request.constraints());
 
         double percentage = request.percentageOfTimeToUse();

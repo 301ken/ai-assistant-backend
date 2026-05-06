@@ -3,9 +3,11 @@ package com.ai.scheduler.service;
 import com.ai.scheduler.dto.llm.TaskDTO;
 import com.ai.scheduler.dto.llm.TaskListDTO;
 import com.ai.scheduler.service.llm_generic.LlmStructuredClient;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class TaskExtractionService {
 
     private LlmStructuredClient llmStructuredClient;
