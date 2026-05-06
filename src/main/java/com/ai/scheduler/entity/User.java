@@ -31,7 +31,7 @@ public class User {
     private String passwordHash;
 
     @Column(name = "account_activated", nullable = false)
-    private boolean accountActivated = false;
+    private boolean accountActivated = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

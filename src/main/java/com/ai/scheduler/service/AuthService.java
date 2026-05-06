@@ -14,6 +14,8 @@ import com.ai.scheduler.security.TokenBlacklistService;
 import com.ai.scheduler.security.UserPrincipal;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final EmailVerificationTokenRepository tokenRepository;
@@ -69,7 +73,11 @@ public class AuthService {
         verificationToken.setExpiresAt(LocalDateTime.now().plusHours(24));
         tokenRepository.save(verificationToken);
 
-        emailService.sendVerificationEmail(user.getEmail(), token, appBaseUrl);
+        try {
+            emailService.sendVerificationEmail(user.getEmail(), token, appBaseUrl);
+        } catch (Exception e) {
+            log.error("Failed to send verification email to {}: {}", user.getEmail(), e.getMessage());
+        }
         return new RegisterResponse(user.getId(), user.getName(), user.getEmail(), user.isAccountActivated(),
                 "Registration successful. Please verify your email.");
     }
