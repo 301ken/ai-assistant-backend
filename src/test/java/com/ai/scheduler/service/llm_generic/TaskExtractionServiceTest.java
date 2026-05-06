@@ -32,14 +32,14 @@ public class TaskExtractionServiceTest {
 
     @Test
     public void generateStucturedResponse_ConvertsSimpleTextIntoTasks() {
-        String prompt = "I have to study Math(10) and also do my programming assignment(7) and in addition to that go to gym(1)";
+        String prompt = "I have to study Math(10) and also do my programming assignment(7) and in addition to that go to gym(1) and also do leetcode(10) and I need a weekly schedule";
 
         List<TaskDTO> tasks = taskExtractionService.extractTasks(prompt);
 
         assumeTrue(tasks != null && !tasks.isEmpty(), "The service outputted an empty list");
 
         for (TaskDTO taskDTO : tasks) {
-            System.out.println(taskDTO.title + ": " + taskDTO.priority);
+            System.out.println(taskDTO.title() + ": " + taskDTO.priority());
         }
     }
 }

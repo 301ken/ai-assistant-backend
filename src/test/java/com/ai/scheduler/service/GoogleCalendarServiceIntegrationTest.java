@@ -1,8 +1,8 @@
 package com.ai.scheduler.service;
 
 import com.ai.scheduler.dto.calendar.CalendarColor;
-import com.ai.scheduler.dto.calendar.CalendarEventRequest;
-import com.ai.scheduler.dto.calendar.CalendarEventResponse;
+import com.ai.scheduler.dto.calendar.google_calendar.CalendarEventRequest;
+import com.ai.scheduler.dto.calendar.google_calendar.CalendarEventResponse;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,8 @@ class GoogleCalendarServiceIntegrationTest {
                 CalendarColor.PEACOCK,
                 now.plusHours(1),
                 now.plusHours(2),
-                TIME_ZONE
+                TIME_ZONE,
+                null
         );
 
         CalendarEventResponse response = service.createEvent(accessToken, request);
@@ -60,6 +61,7 @@ class GoogleCalendarServiceIntegrationTest {
         assertThat(response.title()).isEqualTo("AI Scheduler – Integration Test");
         assertThat(response.colorId()).isEqualTo(CalendarColor.PEACOCK.getColorId());
         assertThat(response.htmlLink()).isNotBlank();
+        assertThat(response.recurrence()).isNull();
 
         System.out.println("Created event: " + response.htmlLink());
     }
@@ -72,8 +74,34 @@ class GoogleCalendarServiceIntegrationTest {
 
         assertThat(events).isNotNull();
         System.out.println("Events today (" + today + "): " + events.size());
-        events.forEach(e -> System.out.printf("  [%s] %s  %s -> %s%n",
-                e.colorId(), e.title(), e.startDateTime(), e.endDateTime()));
+        events.forEach(e -> System.out.printf("  [%s] %s  %s -> %s  recurrence=%s%n",
+                e.colorId(), e.title(), e.startDateTime(), e.endDateTime(), e.recurrence()));
+    }
+
+    @Test
+    void createRecurringEvent_shouldReturnEventWithRecurrenceRule() throws Exception {
+        OffsetDateTime now = OffsetDateTime.now(ZoneId.of(TIME_ZONE));
+        List<String> rrule = List.of("RRULE:FREQ=WEEKLY;COUNT=4");
+
+        CalendarEventRequest request = new CalendarEventRequest(
+                "AI Scheduler – Recurring Test",
+                "Weekly recurring event created by integration test",
+                CalendarColor.SAGE,
+                now.plusHours(3),
+                now.plusHours(4),
+                TIME_ZONE,
+                rrule
+        );
+
+        CalendarEventResponse response = service.createEvent(accessToken, request);
+
+        assertThat(response.id()).isNotBlank();
+        assertThat(response.title()).isEqualTo("AI Scheduler – Recurring Test");
+        assertThat(response.recurrence()).isNotNull();
+        assertThat(response.recurrence()).anyMatch(r -> r.contains("RRULE"));
+
+        System.out.println("Created recurring event: " + response.htmlLink());
+        System.out.println("Recurrence: " + response.recurrence());
     }
 
     @Test
@@ -85,7 +113,7 @@ class GoogleCalendarServiceIntegrationTest {
 
         assertThat(events).isNotNull();
         System.out.println("Events over 3 days: " + events.size());
-        events.forEach(e -> System.out.printf("  [%s] %s  %s -> %s%n",
-                e.colorId(), e.title(), e.startDateTime(), e.endDateTime()));
+        events.forEach(e -> System.out.printf("  [%s] %s  %s -> %s  recurrence=%s%n",
+                e.colorId(), e.title(), e.startDateTime(), e.endDateTime(), e.recurrence()));
     }
 }

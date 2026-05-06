@@ -1,7 +1,7 @@
 package com.ai.scheduler.service;
 
-import com.ai.scheduler.dto.calendar.CalendarEventRequest;
-import com.ai.scheduler.dto.calendar.CalendarEventResponse;
+import com.ai.scheduler.dto.calendar.google_calendar.CalendarEventRequest;
+import com.ai.scheduler.dto.calendar.google_calendar.CalendarEventResponse;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.DateTime;
@@ -54,6 +54,10 @@ public class GoogleCalendarService {
 
         if (request.color() != null) {
             event.setColorId(request.color().getColorId());
+        }
+
+        if (request.recurrence() != null && !request.recurrence().isEmpty()) {
+            event.setRecurrence(request.recurrence());
         }
 
         String timeZone = request.timeZone() != null ? request.timeZone() : "UTC";
@@ -165,7 +169,8 @@ public class GoogleCalendarService {
                 start,
                 end,
                 timeZone,
-                event.getHtmlLink());
+                event.getHtmlLink(),
+                event.getRecurrence());
     }
 
     private OffsetDateTime parseEventDateTime(EventDateTime eventDateTime) {
