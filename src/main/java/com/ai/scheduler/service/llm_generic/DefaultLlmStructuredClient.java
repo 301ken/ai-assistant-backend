@@ -2,7 +2,9 @@ package com.ai.scheduler.service.llm_generic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.stereotype.Service;
 
+@Service
 public class DefaultLlmStructuredClient implements LlmStructuredClient{
 
     private LlmClient llmClient;

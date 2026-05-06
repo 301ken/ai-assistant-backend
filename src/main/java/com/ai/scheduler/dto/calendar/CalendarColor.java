@@ -1,5 +1,7 @@
 package com.ai.scheduler.dto.calendar;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum CalendarColor {
     LAVENDER("1"),
     SAGE("2"),
@@ -21,5 +23,19 @@ public enum CalendarColor {
 
     public String getColorId() {
         return colorId;
+    }
+
+    @JsonCreator
+    public static CalendarColor fromValue(String value) {
+        if (value == null) return null;
+        // Try matching by colorId (numeric string from LLM, e.g. "11")
+        for (CalendarColor c : values()) {
+            if (c.colorId.equals(value)) return c;
+        }
+        // Try matching by name (e.g. "GRAPHITE")
+        try {
+            return CalendarColor.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException ignored) {}
+        return null;
     }
 }
