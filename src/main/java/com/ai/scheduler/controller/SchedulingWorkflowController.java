@@ -35,5 +35,11 @@ public class SchedulingWorkflowController {
                 request.recurrent());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @PostMapping("/rollback")
+    public ResponseEntity<Void> rollbackSchedule() {
+        Long userId = SecurityUtils.currentUserId();
+        schedulingWorkflowService.rollbackLastSchedule(userId);
+        return ResponseEntity.ok().build();
 }
 
