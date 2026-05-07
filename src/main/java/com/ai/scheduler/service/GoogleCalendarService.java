@@ -77,6 +77,28 @@ public class GoogleCalendarService {
     }
 
     /**
+     * Returns all events in the given OffsetDateTime range, sorted by start time.
+     * Uses singleEvents=true so recurring instances are expanded individually.
+     */
+    public List<CalendarEventResponse> getEventsInTimeRange(String accessToken, OffsetDateTime from, OffsetDateTime to)
+            throws IOException, GeneralSecurityException {
+        Calendar service = buildClient(accessToken);
+
+        DateTime timeMin = new DateTime(from.toInstant().toEpochMilli());
+        DateTime timeMax = new DateTime(to.toInstant().toEpochMilli());
+
+        Events eventsResult = service.events().list(PRIMARY_CALENDAR)
+                .setTimeMin(timeMin)
+                .setTimeMax(timeMax)
+                .setSingleEvents(true)
+                .setOrderBy("startTime")
+                .execute();
+
+        List<Event> items = eventsResult.getItems();
+        return items == null ? List.of() : items.stream().map(this::toResponse).toList();
+    }
+
+    /**
      * Deletes an event from the user's primary Google Calendar by event ID.
      */
     public void deleteEvent(String accessToken, String eventId)

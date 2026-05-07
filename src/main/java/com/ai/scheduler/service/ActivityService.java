@@ -4,7 +4,6 @@ import com.ai.scheduler.dto.activity.ActivityRequest;
 import com.ai.scheduler.dto.activity.ActivityResponse;
 import com.ai.scheduler.entity.Activity;
 import com.ai.scheduler.entity.ActivityType;
-import com.ai.scheduler.entity.Task;
 import com.ai.scheduler.entity.User;
 import com.ai.scheduler.exception.ResourceNotFoundException;
 import com.ai.scheduler.repository.ActivityRepository;
@@ -18,12 +17,10 @@ public class ActivityService {
 
     private final ActivityRepository activityRepository;
     private final UserService userService;
-    private final TaskService taskService;
 
-    public ActivityService(ActivityRepository activityRepository, UserService userService, TaskService taskService) {
+    public ActivityService(ActivityRepository activityRepository, UserService userService) {
         this.activityRepository = activityRepository;
         this.userService = userService;
-        this.taskService = taskService;
     }
 
     public List<ActivityResponse> list(Long userId, ActivityType activityType, LocalDate date) {
@@ -63,33 +60,25 @@ public class ActivityService {
         activityRepository.delete(getEntity(userId, id));
     }
 
-    public List<ActivityResponse> listByTask(Long userId, Long taskId) {
-        taskService.getEntity(userId, taskId);
-        return activityRepository.findByTaskIdAndUserId(taskId, userId).stream().map(this::toResponse).toList();
-    }
-
     private Activity getEntity(Long userId, Long id) {
         return activityRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Activity not found"));
     }
 
     private void apply(Long userId, Activity activity, ActivityRequest request) {
-        Task task = null;
-        if (request.taskId() != null) {
-            task = taskService.getEntity(userId, request.taskId());
-        }
-        activity.setTask(task);
         activity.setActivityType(request.activityType());
         activity.setDescription(request.activityDescription());
         activity.setDate(request.date());
         activity.setStartTime(request.startTime());
         activity.setEndTime(request.endTime());
+        activity.setCalendarEventId(request.calendarEventId());
+        activity.setCalendarEventTitle(request.calendarEventTitle());
     }
 
     private ActivityResponse toResponse(Activity activity) {
-        Long taskId = activity.getTask() != null ? activity.getTask().getId() : null;
-        return new ActivityResponse(activity.getId(), activity.getUser().getId(), taskId,
+        return new ActivityResponse(activity.getId(), activity.getUser().getId(),
                 activity.getActivityType(), activity.getDescription(), activity.getDate(),
-                activity.getStartTime(), activity.getEndTime());
+                activity.getStartTime(), activity.getEndTime(),
+                activity.getCalendarEventId(), activity.getCalendarEventTitle());
     }
 }

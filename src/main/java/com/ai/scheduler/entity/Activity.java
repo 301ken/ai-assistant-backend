@@ -30,10 +30,6 @@ public class Activity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "task_id")
-    private Task task;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "activity_type", nullable = false)
     private ActivityType activityType;
@@ -49,4 +45,12 @@ public class Activity {
 
     @Column(name = "end_time", nullable = false)
     private LocalTime endTime;
+
+    /** Google Calendar event ID this activity session is linked to (nullable). */
+    @Column(name = "calendar_event_id")
+    private String calendarEventId;
+
+    /** Denormalized event title so stats work even if the calendar event is later deleted. */
+    @Column(name = "calendar_event_title")
+    private String calendarEventTitle;
 }

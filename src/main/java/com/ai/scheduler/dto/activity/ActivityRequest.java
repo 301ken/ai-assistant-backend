@@ -7,11 +7,12 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record ActivityRequest(
-        Long taskId,
         @NotNull ActivityType activityType,
         @NotBlank String activityDescription,
         @NotNull LocalDate date,
         @NotNull LocalTime startTime,
-        @NotNull LocalTime endTime
+        @NotNull LocalTime endTime,
+        String calendarEventId,
+        String calendarEventTitle
 ) {
 }
