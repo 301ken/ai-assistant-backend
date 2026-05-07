@@ -5,7 +5,6 @@ import com.ai.scheduler.dto.user.UserResponse;
 import com.ai.scheduler.entity.User;
 import com.ai.scheduler.exception.ResourceNotFoundException;
 import com.ai.scheduler.repository.ActivityRepository;
-import com.ai.scheduler.repository.TaskRepository;
 import com.ai.scheduler.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,12 +13,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final TaskRepository taskRepository;
     private final ActivityRepository activityRepository;
 
-    public UserService(UserRepository userRepository, TaskRepository taskRepository, ActivityRepository activityRepository) {
+    public UserService(UserRepository userRepository, ActivityRepository activityRepository) {
         this.userRepository = userRepository;
-        this.taskRepository = taskRepository;
         this.activityRepository = activityRepository;
     }
 
@@ -37,7 +34,6 @@ public class UserService {
     @Transactional
     public void deleteMe(Long userId) {
         activityRepository.deleteByUserId(userId);
-        taskRepository.deleteByUserId(userId);
         userRepository.deleteById(userId);
     }
 

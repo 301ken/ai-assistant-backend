@@ -2,8 +2,12 @@ package com.ai.scheduler.controller;
 
 import com.ai.scheduler.dto.activity.ActivityRequest;
 import com.ai.scheduler.dto.activity.ActivityResponse;
+import com.ai.scheduler.dto.activity.ActivityStatsResponse;
+import com.ai.scheduler.dto.activity.EventComparisonResponse;
+import com.ai.scheduler.dto.calendar.google_calendar.CalendarEventResponse;
 import com.ai.scheduler.entity.ActivityType;
 import com.ai.scheduler.service.ActivityService;
+import com.ai.scheduler.service.ActivityStatisticsService;
 import com.ai.scheduler.util.SecurityUtils;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
@@ -26,9 +30,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class ActivityController {
 
     private final ActivityService activityService;
+    private final ActivityStatisticsService activityStatisticsService;
 
-    public ActivityController(ActivityService activityService) {
+    public ActivityController(ActivityService activityService,
+                              ActivityStatisticsService activityStatisticsService) {
         this.activityService = activityService;
+        this.activityStatisticsService = activityStatisticsService;
     }
 
     @GetMapping
@@ -57,5 +64,31 @@ public class ActivityController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         activityService.delete(SecurityUtils.currentUserId(), id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Returns Google Calendar events in a ±1-day window around {@code date}.
+     * Used by the frontend to populate the "assign to event" picker after stopping the timer.
+     *
+     * GET /api/activities/assignable-events?date=2026-05-07
+     */
+    @GetMapping("/assignable-events")
+    public ResponseEntity<List<CalendarEventResponse>> assignableEvents(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return ResponseEntity.ok(
+                activityStatisticsService.getAssignableEvents(SecurityUtils.currentUserId(), date));
+    }
+
+    /**
+     * Returns a planned-vs-actual breakdown per event title within the given date range.
+     *
+     * GET /api/activities/stats/event-comparison?from=2026-05-04&to=2026-05-10
+     */
+    @GetMapping("/stats/event-comparison")
+    public ResponseEntity<List<EventComparisonResponse>> eventComparison(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return ResponseEntity.ok(
+                activityStatisticsService.getEventComparison(SecurityUtils.currentUserId(), from, to));
     }
 }

@@ -11,8 +11,8 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
     List<Activity> findByUserId(Long userId);
     List<Activity> findByUserIdAndActivityType(Long userId, ActivityType activityType);
     List<Activity> findByUserIdAndDate(Long userId, LocalDate date);
-    List<Activity> findByTaskIdAndUserId(Long taskId, Long userId);
     Optional<Activity> findByIdAndUserId(Long id, Long userId);
     void deleteByUserId(Long userId);
     List<Activity> findByUserIdAndDateBetween(Long userId, LocalDate startDate, LocalDate endDate);
+    List<Activity> findByUserIdAndDateBetweenAndCalendarEventTitleIsNotNull(Long userId, LocalDate startDate, LocalDate endDate);
 }
