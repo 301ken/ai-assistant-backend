@@ -257,6 +257,27 @@
       ]
     },
     {
+      "name": "Scheduling Engine",
+      "item": [
+        {
+          "name": "Generate Schedule",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/engine/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "engine", "generate"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"I need to study for my algorithms exam (8 hours), finish my ML report (5 hours), go to the gym 3 times, and call my parents.\",\n  \"timeRange\": {\n    \"from\": \"2026-05-11T08:00:00Z\",\n    \"to\": \"2026-05-17T20:00:00Z\"\n  },\n  \"percentage\": 0.8,\n  \"recurrent\": false\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Google Calendar OAuth",
       "item": [
         {
