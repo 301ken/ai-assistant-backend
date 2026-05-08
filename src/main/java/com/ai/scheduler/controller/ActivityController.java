@@ -67,12 +67,25 @@ public class ActivityController {
     }
 
     /**
+     * Returns aggregate statistics (total hours, session count, daily breakdown) for the given date range.
+     *
+     * GET /api/activities/stats?from=2026-05-01&to=2026-05-08
+     */
+    @GetMapping("/stats")
+    public ResponseEntity<ActivityStatsResponse> stats(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return ResponseEntity.ok(
+                activityStatisticsService.calculateStatistics(SecurityUtils.currentUserId(), from, to));
+    }
+
+    /**
      * Returns Google Calendar events in a ±1-day window around {@code date}.
      * Used by the frontend to populate the "assign to event" picker after stopping the timer.
      *
-     * GET /api/activities/assignable-events?date=2026-05-07
+     * GET /api/activities/stats/assignable-events?date=2026-05-07
      */
-    @GetMapping("/assignable-events")
+    @GetMapping("/stats/assignable-events")
     public ResponseEntity<List<CalendarEventResponse>> assignableEvents(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return ResponseEntity.ok(
