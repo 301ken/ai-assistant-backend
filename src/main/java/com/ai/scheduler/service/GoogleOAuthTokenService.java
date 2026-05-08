@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -133,8 +134,13 @@ public class GoogleOAuthTokenService {
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
 
-        Map<String, Object> response = restTemplate.postForObject(
-                TOKEN_ENDPOINT, request, Map.class);
+        Map<String, Object> response;
+        try {
+            response = restTemplate.postForObject(TOKEN_ENDPOINT, request, Map.class);
+        } catch (HttpClientErrorException e) {
+            throw new RuntimeException(
+                    "Google token endpoint returned " + e.getStatusCode() + ": " + e.getResponseBodyAsString(), e);
+        }
 
         if (response == null) {
             throw new RuntimeException("Empty response from Google token endpoint");
