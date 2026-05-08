@@ -281,10 +281,22 @@
       "name": "Google Calendar OAuth",
       "item": [
         {
-          "name": "Get Connect URL (JWT required)",
+          "name": "Get Connect URL – Web",
           "request": {
             "method": "GET",
             "url": { "raw": "{{baseUrl}}/auth/google/calendar/connect", "host": ["{{baseUrl}}"], "path": ["auth", "google", "calendar", "connect"] }
+          }
+        },
+        {
+          "name": "Get Connect URL – Mobile (flutter_web_auth_2)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/auth/google/calendar/connect?appRedirectUri=com.yourapp%3A%2F%2Foauth",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "google", "calendar", "connect"],
+              "query": [{ "key": "appRedirectUri", "value": "com.yourapp://oauth" }]
+            }
           }
         },
         {
