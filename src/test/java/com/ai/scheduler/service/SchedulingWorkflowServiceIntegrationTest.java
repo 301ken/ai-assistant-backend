@@ -3,6 +3,7 @@ package com.ai.scheduler.service;
 import com.ai.scheduler.dto.calendar.google_calendar.CalendarEventResponse;
 import com.ai.scheduler.dto.time.TimeRange;
 import com.ai.scheduler.schedulers.LLMScheduler;
+import com.ai.scheduler.schedulers.Scheduler;
 import com.ai.scheduler.service.llm_generic.DefaultLlmStructuredClient;
 import com.ai.scheduler.service.llm_generic.OpenAiLlmClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -98,7 +99,8 @@ class SchedulingWorkflowServiceIntegrationTest {
 
         DefaultLlmStructuredClient structuredClient = new DefaultLlmStructuredClient(openAiClient, objectMapper);
         TaskExtractionService taskExtractionService = new TaskExtractionService(structuredClient);
-        LLMScheduler scheduler = new LLMScheduler(structuredClient, objectMapper);
+        LLMScheduler llmScheduler = new LLMScheduler(structuredClient, objectMapper);
+        Map<String, Scheduler> schedulerMap = Map.of("llm", llmScheduler);
 
         // Returns the ACCESS_TOKEN from .env directly — no DB needed
         GoogleOAuthTokenService tokenService = new GoogleOAuthTokenService(
@@ -113,14 +115,14 @@ class SchedulingWorkflowServiceIntegrationTest {
                 new GoogleCalendarService(),
                 tokenService,
                 taskExtractionService,
-                scheduler
+                schedulerMap
         );
     }
 
     @Test
     void generateSchedule_createsEventsInGoogleCalendar() {
         List<CalendarEventResponse> created = workflowService.generateSchedule(
-                1L, RICH_PROMPT, new TimeRange(RANGE_START, RANGE_END), 0.8, false);
+                1L, RICH_PROMPT, new TimeRange(RANGE_START, RANGE_END), 0.8, false, "llm");
 
         assertNotNull(created);
         assertFalse(created.isEmpty(), "Expected at least one event created in Google Calendar");
@@ -134,7 +136,7 @@ class SchedulingWorkflowServiceIntegrationTest {
     @Test
     void generateSchedule_allCreatedEventsHaveValidFields() {
         List<CalendarEventResponse> created = workflowService.generateSchedule(
-                1L, RICH_PROMPT, new TimeRange(RANGE_START, RANGE_END), 0.8, false);
+                1L, RICH_PROMPT, new TimeRange(RANGE_START, RANGE_END), 0.8, false, "llm");
 
         for (CalendarEventResponse e : created) {
             assertNotNull(e.id(),            "id must not be null for: " + e.title());
@@ -151,7 +153,7 @@ class SchedulingWorkflowServiceIntegrationTest {
     @Test
     void generateSchedule_recurringMode_createsEvents() {
         List<CalendarEventResponse> created = workflowService.generateSchedule(
-                1L, RICH_PROMPT, new TimeRange(RANGE_START, RANGE_END), 0.9, true);
+                1L, RICH_PROMPT, new TimeRange(RANGE_START, RANGE_END), 0.9, true, "llm");
 
         assertFalse(created.isEmpty(), "Expected events in recurring schedule");
 
