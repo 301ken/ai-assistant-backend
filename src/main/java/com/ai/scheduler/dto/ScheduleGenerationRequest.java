@@ -6,6 +6,8 @@ public record ScheduleGenerationRequest(
         String prompt,
         TimeRange timeRange,
         double percentage,
-        boolean recurrent
+        boolean recurrent,
+        /** Selects the scheduling engine: "llm" (default) or "proportional". */
+        String schedulerType
 ) {
 }

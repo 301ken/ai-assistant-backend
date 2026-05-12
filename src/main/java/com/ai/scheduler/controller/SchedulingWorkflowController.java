@@ -32,7 +32,8 @@ public class SchedulingWorkflowController {
                 request.prompt(),
                 request.timeRange(),
                 request.percentage(),
-                request.recurrent());
+                request.recurrent(),
+                request.schedulerType());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

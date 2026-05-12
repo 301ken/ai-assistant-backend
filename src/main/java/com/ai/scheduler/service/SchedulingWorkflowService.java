@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,10 +27,12 @@ public class SchedulingWorkflowService {
 
     private static final Logger log = LoggerFactory.getLogger(SchedulingWorkflowService.class);
 
+    private static final String DEFAULT_SCHEDULER = "proportional";
+
     private final GoogleCalendarService googleCalendarService;
     private final GoogleOAuthTokenService googleOAuthTokenService;
     private final TaskExtractionService taskExtractionService;
-    private final Scheduler scheduler;
+    private final Map<String, Scheduler> schedulers;
 
     /** IDs of events created during the last generateSchedule call — used for rollback. */
     private final Set<String> lastCreatedEventIds = new LinkedHashSet<>();
@@ -37,11 +40,21 @@ public class SchedulingWorkflowService {
     public SchedulingWorkflowService(GoogleCalendarService googleCalendarService,
                                      GoogleOAuthTokenService googleOAuthTokenService,
                                      TaskExtractionService taskExtractionService,
-                                     Scheduler scheduler) {
+                                     Map<String, Scheduler> schedulers) {
         this.googleCalendarService = googleCalendarService;
         this.googleOAuthTokenService = googleOAuthTokenService;
         this.taskExtractionService = taskExtractionService;
-        this.scheduler = scheduler;
+        this.schedulers = schedulers;
+    }
+
+    private Scheduler resolveScheduler(String type) {
+        String key = (type == null || type.isBlank()) ? DEFAULT_SCHEDULER : type.trim().toLowerCase();
+        Scheduler s = schedulers.get(key);
+        if (s == null) {
+            throw new IllegalArgumentException(
+                    "Unknown schedulerType '" + key + "'. Available: " + schedulers.keySet());
+        }
+        return s;
     }
 
     private List<ScheduleConstraint> getConstraintsInTimeRange(Long userId, TimeRange timeRange) {
@@ -68,7 +81,7 @@ public class SchedulingWorkflowService {
         }
     }
 
-    public List<CalendarEventResponse> generateSchedule(Long userId, String prompt, TimeRange timeRange, double percentageOfTimeToUse, boolean recurrent) {
+    public List<CalendarEventResponse> generateSchedule(Long userId, String prompt, TimeRange timeRange, double percentageOfTimeToUse, boolean recurrent, String schedulerType) {
 
         List<ScheduleConstraint> constraints = getConstraintsInTimeRange(userId, timeRange);
         List<TaskDTO> tasks = taskExtractionService.extractTasks(prompt);
@@ -80,7 +93,7 @@ public class SchedulingWorkflowService {
                         percentageOfTimeToUse,
                         recurrent);
 
-        GeneratedSchedule schedule = scheduler.generate(request);
+        GeneratedSchedule schedule = resolveScheduler(schedulerType).generate(request);
 
         String accessToken = googleOAuthTokenService.getValidAccessToken(userId);
         lastCreatedEventIds.clear();
