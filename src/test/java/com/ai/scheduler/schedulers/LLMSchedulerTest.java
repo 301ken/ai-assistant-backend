@@ -150,8 +150,8 @@ public class LLMSchedulerTest {
     @Test
     void generate_highPriorityTaskScheduledEarlierThanLowPriority() {
         TaskListDTO tasks = new TaskListDTO(List.of(
-                new TaskDTO("Critical Deadline Task", 10.0),
-                new TaskDTO("Optional Reading", 2.0)
+                new TaskDTO("Critical Deadline Task", 10.0, null),
+                new TaskDTO("Optional Reading", 2.0, null)
         ));
         SchedulingRequest req = new SchedulingRequest(
                 tasks, List.of(), weekRange(), 0.9, false);
@@ -179,20 +179,20 @@ public class LLMSchedulerTest {
 
     private TaskListDTO someTaskList() {
         return new TaskListDTO(List.of(
-                new TaskDTO("Study for Math exam", 9.0),
-                new TaskDTO("Complete programming assignment", 7.0),
-                new TaskDTO("Go to the gym", 3.0)
+                new TaskDTO("Study for Math exam", 9.0, null),
+                new TaskDTO("Complete programming assignment", 7.0, null),
+                new TaskDTO("Go to the gym", 3.0, null)
         ));
     }
 
     private TaskListDTO fullWeekTaskList() {
         return new TaskListDTO(List.of(
-                new TaskDTO("Study for Math exam", 9.0),
-                new TaskDTO("Complete programming assignment", 8.0),
-                new TaskDTO("Read research papers", 6.0),
-                new TaskDTO("Team project work", 7.0),
-                new TaskDTO("Go to the gym", 4.0),
-                new TaskDTO("Personal admin tasks", 3.0)
+                new TaskDTO("Study for Math exam", 9.0, null),
+                new TaskDTO("Complete programming assignment", 8.0, null),
+                new TaskDTO("Read research papers", 6.0, null),
+                new TaskDTO("Team project work", 7.0, null),
+                new TaskDTO("Go to the gym", 4.0, null),
+                new TaskDTO("Personal admin tasks", 3.0, null)
         ));
     }
 
