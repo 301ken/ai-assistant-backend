@@ -220,7 +220,9 @@ src/main/java/com/ai/scheduler/
 
 ## Live Demo
 
-The backend is deployed on **Google Cloud Run** (see [Deployment](#deployment)). The companion
+The backend is deployed on **Google Cloud Run** (see [Deployment](#deployment)). 
+Link to deployed back end: https://ai-scheduler-backend-805312510671.europe-west3.run.app
+The companion
 **mobile app** that consumes it is not yet published to the App Store, so the easiest way to see
 the full product end-to-end is the demo video:
 
