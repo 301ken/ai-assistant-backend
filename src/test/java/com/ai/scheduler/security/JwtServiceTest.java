@@ -96,10 +96,18 @@ class JwtServiceTest {
     @Test
     void parseClaims_tamperedToken_throwsException() {
         String token = jwtService.generateToken(principal(1L, "alice@example.com"));
-        // flip a character in the signature part
-        String tampered = token.substring(0, token.length() - 1) + (token.charAt(token.length() - 1) == 'A' ? 'B' : 'A');
 
-        assertThatThrownBy(() -> jwtService.extractUsername(tampered));
+        // Tamper the FIRST character of the signature segment. The last base64url
+        // char of a 32-byte HMAC signature only carries 4 significant bits (the low
+        // 2 are padding), so flipping it can be a no-op; the first char always carries
+        // significant bits, so this guarantees the signature no longer matches.
+        int sigStart = token.lastIndexOf('.') + 1;
+        char first = token.charAt(sigStart);
+        char flipped = (first == 'A') ? 'B' : 'A';
+        String tampered = token.substring(0, sigStart) + flipped + token.substring(sigStart + 1);
+
+        assertThatThrownBy(() -> jwtService.extractUsername(tampered))
+                .isInstanceOf(io.jsonwebtoken.JwtException.class);
     }
 
     // -------------------------------------------------------------------------
