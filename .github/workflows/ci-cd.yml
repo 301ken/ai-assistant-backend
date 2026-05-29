@@ -1,4 +1,4 @@
-name: CI / CD
+name: CI
 
 on:
   push:
@@ -6,17 +6,9 @@ on:
   pull_request:
     branches: ["**"]
 
-env:
-  # Set these as GitHub repository variables (Settings → Secrets and variables → Variables)
-  GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-  GCP_REGION: ${{ vars.GCP_REGION }}           # e.g. us-central1
-  CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE }} # e.g. ai-scheduler-backend
-  # Artifact Registry repository (e.g. ai-scheduler) — must already exist in GCP_REGION
-  AR_REPOSITORY: ${{ vars.AR_REPOSITORY || 'ai-scheduler' }}
-
 jobs:
   # ──────────────────────────────────────────────
-  # Job 1 — Run the test suite (every push & PR)
+  # Run the test suite (every push & PR)
   # ──────────────────────────────────────────────
   test:
     name: Build & Test
@@ -43,58 +35,3 @@ jobs:
           name: jacoco-report
           path: target/site/jacoco/
           retention-days: 7
-
-  # ──────────────────────────────────────────────
-  # Job 2 — Build image & deploy to Cloud Run
-  #          (only on push to main, after tests pass)
-  # ──────────────────────────────────────────────
-  deploy:
-    name: Deploy to Cloud Run
-    runs-on: ubuntu-latest
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    permissions:
-      contents: read
-      id-token: write   # required for Workload Identity Federation
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Authenticate to GCP using Workload Identity Federation (recommended).
-      # See docs/ci-cd.md for setup instructions.
-      # If you prefer a service-account JSON key, replace the two `workload_identity_*`
-      # inputs with:  credentials_json: ${{ secrets.GCP_SA_KEY }}
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
-          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Configure Docker to use Artifact Registry
-        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
-
-      - name: Build & push Docker image
-        env:
-          IMAGE: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.CLOUD_RUN_SERVICE }}
-        run: |
-          docker build \
-            --tag "$IMAGE:${{ github.sha }}" \
-            --tag "$IMAGE:latest" \
-            .
-          docker push "$IMAGE:${{ github.sha }}"
-          docker push "$IMAGE:latest"
-
-      - name: Deploy to Cloud Run
-        env:
-          IMAGE: ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.CLOUD_RUN_SERVICE }}
-        run: |
-          gcloud run deploy "$CLOUD_RUN_SERVICE" \
-            --image "$IMAGE:${{ github.sha }}" \
-            --region "$GCP_REGION" \
-            --platform managed \
-            --quiet
