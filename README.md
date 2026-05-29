@@ -200,6 +200,7 @@ src/main/java/com/ai/scheduler/
 |----------|----------|
 | **[docs/architecture.md](docs/architecture.md)** | System diagram, component responsibilities, design decisions & rationale |
 | **[docs/api.md](docs/api.md)** | Full REST API reference (endpoints, payloads, examples) |
+| **[docs/ci-cd.md](docs/ci-cd.md)** | CI/CD pipeline: required GitHub secrets/variables and one-time GCP setup |
 | **[TEST_REPORT.md](TEST_REPORT.md)** | Test inventory, coverage, and gap analysis |
 | `postman/` | Postman collection for manual API exploration |
 
