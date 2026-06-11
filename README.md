@@ -111,28 +111,93 @@ Opens on `http://localhost:8085`.
 
 ### Run with PostgreSQL
 
-For persistent data, connect to PostgreSQL:
+For persistent, multi-user data storage, connect to PostgreSQL:
 
+#### 1. Install PostgreSQL
+
+**Windows:**
+- Download from [postgresql.org](https://www.postgresql.org/download/windows/)
+- Or use Chocolatey: `choco install postgresql`
+
+**macOS:**
 ```bash
-# 1. Create the database
-createdb ai_scheduler
-
-# 2. Set environment variables (or create .env file)
-export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ai_scheduler
-export SPRING_DATASOURCE_USERNAME=admin
-export SPRING_DATASOURCE_PASSWORD=admin123
-
-# 3. Run the app
-./mvnw spring-boot:run
+brew install postgresql@14
+brew services start postgresql@14
 ```
 
-**Or on Windows:**
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt-get install postgresql postgresql-contrib
+sudo systemctl start postgresql
+```
+
+#### 2. Create the Database
 
 ```bash
-$env:SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/ai_scheduler"
-$env:SPRING_DATASOURCE_USERNAME="admin"
-$env:SPRING_DATASOURCE_PASSWORD="admin123"
+# Login to PostgreSQL
+psql -U postgres
+
+# Create database and user
+CREATE DATABASE ai_scheduler ENCODING 'UTF8';
+CREATE USER ai_user WITH PASSWORD 'ai_password';
+ALTER ROLE ai_user SET client_encoding TO 'utf8';
+ALTER ROLE ai_user SET default_transaction_isolation TO 'read committed';
+ALTER ROLE ai_user SET default_transaction_deferrable TO on;
+GRANT ALL PRIVILEGES ON DATABASE ai_scheduler TO ai_user;
+\q
+```
+
+#### 3. Configure Environment Variables
+
+Create a `.env` file in the project root:
+
+```dotenv
+# PostgreSQL Configuration
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/ai_scheduler
+SPRING_DATASOURCE_USERNAME=ai_user
+SPRING_DATASOURCE_PASSWORD=ai_password
+
+# Other configurations
+OPENAI_API_KEY=sk-...
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+
+PORT=8085
+BASE_URL=http://localhost:8085
+```
+
+#### 4. Run the Application
+
+```bash
+# macOS / Linux
+./mvnw spring-boot:run
+
+# Windows
 mvnw.cmd spring-boot:run
+```
+
+The app will connect to PostgreSQL and start on `http://localhost:8085`.
+
+#### 5. Verify Connection
+
+Check the logs:
+```
+INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+```
+
+Or connect directly to verify the schema was created:
+```bash
+psql -U ai_user -d ai_scheduler -c "\dt"
+```
+
+#### Switching Back to H2
+
+To use the in-memory H2 database again, simply remove or comment out the database environment variables:
+```dotenv
+# Use H2 in-memory (remove PostgreSQL settings)
+# SPRING_DATASOURCE_URL=jdbc:postgresql://...
 ```
 
 ---
@@ -176,19 +241,138 @@ The app reads `.env` via `spring-dotenv` and respects process environment variab
 
 ### Run with Docker
 
+#### Option 1: Docker with In-Memory H2 (Quick Test)
+
 ```bash
+# Build the image
 docker build -t ai-scheduler-backend .
-docker run --rm -p 8085:8080 ai-scheduler-backend
+
+# Run the container
+docker run --rm -p 8085:8085 ai-scheduler-backend
 ```
 
-**With environment variables:**
+The app starts on `http://localhost:8085` with an in-memory H2 database.
+
+#### Option 2: Docker + PostgreSQL with docker-compose (Recommended)
+
+Create a `docker-compose.yml` in the project root:
+
+```yaml
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ai_scheduler_db
+    environment:
+      POSTGRES_DB: ai_scheduler
+      POSTGRES_USER: ai_user
+      POSTGRES_PASSWORD: ai_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai_scheduler_backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ai_scheduler
+      SPRING_DATASOURCE_USERNAME: ai_user
+      SPRING_DATASOURCE_PASSWORD: ai_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      PORT: 8085
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    ports:
+      - "8085:8085"
+    volumes:
+      - ./:/workspace
+    command: ["java", "-jar", "target/scheduler-*.jar"]
+
+volumes:
+  postgres_data:
+
+networks:
+  default:
+    name: ai_scheduler_network
+```
+
+**Run the full stack:**
 
 ```bash
-docker run --rm -p 8085:8080 \
-  -e SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/ai_scheduler \
-  -e SPRING_DATASOURCE_USERNAME=admin \
-  -e SPRING_DATASOURCE_PASSWORD=admin123 \
+# Build and start all services
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f backend
+
+# Stop all services
+docker-compose down
+
+# Remove volumes (clean database)
+docker-compose down -v
+```
+
+**Access services:**
+- Backend API: `http://localhost:8085`
+- PostgreSQL: `localhost:5432` (connect with `ai_user` / `ai_password`)
+
+#### Option 3: Docker Run with PostgreSQL (Manual)
+
+**Start PostgreSQL container:**
+```bash
+docker run -d --name ai_scheduler_db \
+  -e POSTGRES_DB=ai_scheduler \
+  -e POSTGRES_USER=ai_user \
+  -e POSTGRES_PASSWORD=ai_password \
+  -p 5432:5432 \
+  postgres:15-alpine
+```
+
+**Build the backend image:**
+```bash
+docker build -t ai-scheduler-backend .
+```
+
+**Run the backend (link to PostgreSQL):**
+```bash
+docker run --rm -p 8085:8085 \
+  --link ai_scheduler_db:postgres \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ai_scheduler \
+  -e SPRING_DATASOURCE_USERNAME=ai_user \
+  -e SPRING_DATASOURCE_PASSWORD=ai_password \
   -e OPENAI_API_KEY=sk-... \
+  -e GOOGLE_CLIENT_ID=your-client-id \
+  -e GOOGLE_CLIENT_SECRET=your-secret \
+  ai-scheduler-backend
+```
+
+#### Environment Variables for Docker
+
+Push environment variables via `-e` flag or `.env` file:
+
+```bash
+docker run -p 8085:8085 \
+  -e SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/ai_scheduler \
+  -e SPRING_DATASOURCE_USERNAME=ai_user \
+  -e SPRING_DATASOURCE_PASSWORD=ai_password \
+  -e OPENAI_API_KEY=sk-... \
+  -e GOOGLE_CLIENT_ID=... \
+  -e GOOGLE_CLIENT_SECRET=... \
   ai-scheduler-backend
 ```
 
@@ -264,6 +448,9 @@ See **[docs/architecture.md](docs/architecture.md)** for:
 | **[docs/architecture.md](docs/architecture.md)** | System design, workflow, scheduling engines |
 | **[docs/api.md](docs/api.md)** | REST API reference (endpoints, payloads) |
 | **[docs/ci-cd.md](docs/ci-cd.md)** | CI/CD pipeline and deployment to Google Cloud Run |
+| **[docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md)** | Detailed database setup (H2, PostgreSQL, Docker) |
+| **[TEST_REPORT.md](TEST_REPORT.md)** | Test inventory and coverage analysis |
+| `postman/` | Postman collection for API exploration |
 | **[TEST_REPORT.md](TEST_REPORT.md)** | Test inventory and coverage analysis |
 | `postman/` | Postman collection for API exploration |
 

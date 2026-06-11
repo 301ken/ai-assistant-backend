@@ -1,0 +1,65 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: ai_scheduler_db
+    environment:
+      POSTGRES_DB: ai_scheduler
+      POSTGRES_USER: ai_user
+      POSTGRES_PASSWORD: ai_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ai_scheduler_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ai_scheduler_backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database Configuration
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ai_scheduler
+      SPRING_DATASOURCE_USERNAME: ai_user
+      SPRING_DATASOURCE_PASSWORD: ai_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      
+      # Server Configuration
+      PORT: 8085
+      BASE_URL: http://localhost:8085
+      
+      # External API Keys (provide these or leave blank)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:8085/auth/google/calendar/callback}
+      
+      # Email Configuration (optional)
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    ports:
+      - "8085:8085"
+    depends_on:
+      - postgres
+    networks:
+      - ai_scheduler_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  ai_scheduler_network:
+    driver: bridge
