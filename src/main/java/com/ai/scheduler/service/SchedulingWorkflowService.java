@@ -14,10 +14,8 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -33,9 +31,6 @@ public class SchedulingWorkflowService {
     private final GoogleOAuthTokenService googleOAuthTokenService;
     private final TaskExtractionService taskExtractionService;
     private final Map<String, Scheduler> schedulers;
-
-    /** IDs of events created during the last generateSchedule call — used for rollback. */
-    private final Set<String> lastCreatedEventIds = new LinkedHashSet<>();
 
     public SchedulingWorkflowService(GoogleCalendarService googleCalendarService,
                                      GoogleOAuthTokenService googleOAuthTokenService,
@@ -60,7 +55,7 @@ public class SchedulingWorkflowService {
     private List<ScheduleConstraint> getConstraintsInTimeRange(Long userId, TimeRange timeRange) {
         String accessToken = googleOAuthTokenService.getValidAccessToken(userId);
 
-        // Collect every date that falls within the range (inclusive)
+        // Collect every date tыщ hat falls within the range (inclusive)
         List<LocalDate> days = new ArrayList<>();
         LocalDate cursor = timeRange.from().toLocalDate();
         LocalDate last = timeRange.to().toLocalDate();
@@ -96,7 +91,6 @@ public class SchedulingWorkflowService {
         GeneratedSchedule schedule = resolveScheduler(schedulerType).generate(request);
 
         String accessToken = googleOAuthTokenService.getValidAccessToken(userId);
-        lastCreatedEventIds.clear();
         List<CalendarEventResponse> created = new ArrayList<>();
         for (SchedulerEvent event : schedule.events()) {
             CalendarEventRequest calRequest = new CalendarEventRequest(
@@ -111,9 +105,6 @@ public class SchedulingWorkflowService {
             try {
                 CalendarEventResponse response = googleCalendarService.createEvent(accessToken, calRequest);
                 created.add(response);
-                if (response.id() != null) {
-                    lastCreatedEventIds.add(response.id());
-                }
             } catch (IOException | GeneralSecurityException e) {
                 throw new RuntimeException("Failed to create calendar event '" + event.title() + "': " + e.getMessage(), e);
             }
@@ -122,18 +113,23 @@ public class SchedulingWorkflowService {
     }
 
     /**
-     * Deletes all events that were created during the last {@link #generateSchedule} call.
-     * Safe to call multiple times — subsequent calls will be no-ops if already rolled back.
+     * Deletes the given calendar events — typically the ones returned by a preceding
+     * {@link #generateSchedule} call, whose IDs the caller passes back in.
      *
-     * @param userId the authenticated user whose calendar tokens are used
+     * <p>Stateless by design: the IDs to delete come from the request rather than a
+     * server-side field, so concurrent users can never roll back each other's events.
+     * Safe to call with an empty list (no-op).</p>
+     *
+     * @param userId   the authenticated user whose calendar tokens are used
+     * @param eventIds the calendar event IDs to delete
      */
-    public void rollbackLastSchedule(Long userId) {
-        if (lastCreatedEventIds.isEmpty()) {
+    public void rollbackLastSchedule(Long userId, List<String> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
             return;
         }
         String accessToken = googleOAuthTokenService.getValidAccessToken(userId);
         List<String> failed = new ArrayList<>();
-        for (String eventId : lastCreatedEventIds) {
+        for (String eventId : eventIds) {
             try {
                 googleCalendarService.deleteEvent(accessToken, eventId);
                 log.info("Rolled back calendar event: {}", eventId);
@@ -142,7 +138,6 @@ public class SchedulingWorkflowService {
                 failed.add(eventId);
             }
         }
-        lastCreatedEventIds.clear();
         if (!failed.isEmpty()) {
             throw new RuntimeException("Rollback incomplete — could not delete event IDs: " + failed);
         }

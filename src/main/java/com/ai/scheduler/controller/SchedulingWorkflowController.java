@@ -1,5 +1,6 @@
 package com.ai.scheduler.controller;
 
+import com.ai.scheduler.dto.RollbackRequest;
 import com.ai.scheduler.dto.ScheduleGenerationRequest;
 import com.ai.scheduler.dto.calendar.google_calendar.CalendarEventResponse;
 import com.ai.scheduler.service.SchedulingWorkflowService;
@@ -38,9 +39,9 @@ public class SchedulingWorkflowController {
     }
 
     @PostMapping("/rollback")
-    public ResponseEntity<Void> rollbackSchedule() {
+    public ResponseEntity<Void> rollbackSchedule(@RequestBody RollbackRequest request) {
         Long userId = SecurityUtils.currentUserId();
-        schedulingWorkflowService.rollbackLastSchedule(userId);
+        schedulingWorkflowService.rollbackLastSchedule(userId, request.eventIds());
         return ResponseEntity.ok().build();
     }
 }
